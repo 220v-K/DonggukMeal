@@ -93,6 +93,16 @@ async function fetchAndUploadImages() {
     try {
       const response = await axios.get(articleUrl);
       const $ = cheerio.load(response.data);
+
+      // 제목 추출 로직 가정
+      const titleText = $(".tit p").text(); // 예를 들어 제목이 <h1> 태그에 있다고 가정
+      const dateRegex = /(\d{2}\.\d{2}\.\d{2}~\d{2}\.\d{2})/;
+      const match = dateRegex.exec(titleText);
+      let formattedDate = "newImage";
+      if (match) {
+        formattedDate = match[1].replace(/\./g, "_").replace(/~/g, "_"); // "24_05_06_05_10" 형식으로 변경
+      }
+
       const images = $("img[src*='/cmmn/fileView?']");
 
       for (let i = 0; i < images.length; i++) {
@@ -100,7 +110,8 @@ async function fetchAndUploadImages() {
         const imageUrl = src.startsWith("http")
           ? src
           : `https://dorm.dongguk.edu${src}`;
-        const imageFilename = path.basename(new URL(imageUrl).pathname);
+        // const imageFilename = path.basename(new URL(imageUrl).pathname);
+        const imageFilename = `${formattedDate}.png`;
         const publicUrl = await uploadImageToStorage(imageUrl, imageFilename);
         console.log(`Uploaded ${imageFilename} to ${publicUrl}`);
       }
@@ -115,6 +126,11 @@ async function fetchAndUploadImages() {
 // export
 exports.fetchAndUploadImages = functions.https.onRequest(
   async (request, response) => {
-    fetchAndUploadImages();
+    try {
+      await fetchAndUploadImages();
+      response.status(200).send({ status: "success", msg: "successed" });
+    } catch (error) {
+      response.status(500).send({ status: "fail", msg: "failed" });
+    }
   }
 );
