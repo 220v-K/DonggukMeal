@@ -64,7 +64,10 @@ async function fetchAndDownloadImages() {
         const imageUrl = src.startsWith("http")
           ? src
           : `https://dorm.dongguk.edu${src}`;
-        const imageFilename = path.basename(new URL(imageUrl).pathname);
+        const imageFilename = path.basename(
+          // new URL(imageUrl).pathname + ".png"
+          "downloadImage.png" // 다운로드한 이미지가 저장되는 이름(경로)
+        );
         await downloadImage(imageUrl, imageFilename);
         console.log(`Downloaded ${imageFilename}`);
       }
